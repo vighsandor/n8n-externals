@@ -16,6 +16,7 @@ PAGE="1"
 IMAGE_FILE="/tmp/logo.png"
 TSA_URL="http://timestamp.digicert.com"
 MODE="basic"
+VISIBLE_SIGNATURE="no"
 
 # Usage function
 usage() {
@@ -30,8 +31,9 @@ Required arguments:
 
 Optional arguments:
   -m MODE         Signing mode: basic|timestamp|baseline-lt|baseline-lta (default: basic)
-  -p PAGE         Page number for signature (default: 1)
-  -g IMAGE        Signature image file path (default: /tmp/logo.png)
+  -v              Enable visible signature (use --page and --image parameters)
+  -p PAGE         Page number for signature (default: 1, only used with -v)
+  -g IMAGE        Signature image file path (default: /tmp/logo.png, only used with -v)
   -t TSA_URL      Timestamp authority URL (default: http://timestamp.digicert.com)
   -j JAR_PATH     Path to open-pdf-sign.jar (default: /tmp/open-pdf-sign.jar)
   -h              Show this help message
@@ -43,30 +45,31 @@ Signing modes:
   baseline-lta    Signature with timestamp and baseline-lta profile
 
 Examples:
-  # Basic signing
+  # Basic signing without visible signature
   $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem
 
-  # With timestamp
-  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m timestamp
+  # With timestamp and visible signature
+  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m timestamp -v
 
-  # With baseline-lt profile
-  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m baseline-lt
+  # With baseline-lt profile and visible signature on page 2
+  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m baseline-lt -v -p 2
 
-  # With baseline-lta profile and custom image
-  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m baseline-lta -g /path/to/logo.png
+  # With baseline-lta profile, visible signature and custom image
+  $0 -i input.pdf -o output.pdf -c cert.pem -k key.pem -m baseline-lta -v -g /path/to/logo.png
 
 EOF
     exit 1
 }
 
 # Parse command line arguments
-while getopts "i:o:c:k:m:p:g:t:j:h" opt; do
+while getopts "i:o:c:k:m:p:g:t:j:vh" opt; do
     case $opt in
         i) INPUT_FILE="$OPTARG" ;;
         o) OUTPUT_FILE="$OPTARG" ;;
         c) CERT_FILE="$OPTARG" ;;
         k) KEY_FILE="$OPTARG" ;;
         m) MODE="$OPTARG" ;;
+        v) VISIBLE_SIGNATURE="yes" ;;
         p) PAGE="$OPTARG" ;;
         g) IMAGE_FILE="$OPTARG" ;;
         t) TSA_URL="$OPTARG" ;;
@@ -105,9 +108,12 @@ if [ ! -f "$KEY_FILE" ]; then
     exit 1
 fi
 
-if [ ! -f "$IMAGE_FILE" ]; then
-    echo "Error: Image file not found: $IMAGE_FILE"
-    exit 1
+# Validate image file only if visible signature is enabled
+if [ "$VISIBLE_SIGNATURE" = "yes" ]; then
+    if [ ! -f "$IMAGE_FILE" ]; then
+        echo "Error: Image file not found: $IMAGE_FILE"
+        exit 1
+    fi
 fi
 
 # Validate mode (POSIX-compliant way)
@@ -125,18 +131,25 @@ esac
 # Build the command based on mode
 BASE_CMD="java -jar $JAR_PATH -i $INPUT_FILE -o $OUTPUT_FILE -c $CERT_FILE -k $KEY_FILE"
 
+# Add visible signature parameters if enabled
+if [ "$VISIBLE_SIGNATURE" = "yes" ]; then
+    SIGNATURE_PARAMS="--page $PAGE --image $IMAGE_FILE"
+else
+    SIGNATURE_PARAMS=""
+fi
+
 case $MODE in
     basic)
-        CMD="$BASE_CMD --page $PAGE --image $IMAGE_FILE"
+        CMD="$BASE_CMD $SIGNATURE_PARAMS"
         ;;
     timestamp)
-        CMD="$BASE_CMD --timestamp --tsa $TSA_URL --page $PAGE --image $IMAGE_FILE"
+        CMD="$BASE_CMD --timestamp --tsa $TSA_URL $SIGNATURE_PARAMS"
         ;;
     baseline-lt)
-        CMD="$BASE_CMD --timestamp --tsa $TSA_URL --baseline-lt --page $PAGE --image $IMAGE_FILE"
+        CMD="$BASE_CMD --timestamp --tsa $TSA_URL --baseline-lt $SIGNATURE_PARAMS"
         ;;
     baseline-lta)
-        CMD="$BASE_CMD --timestamp --tsa $TSA_URL --baseline-lta --page $PAGE --image $IMAGE_FILE"
+        CMD="$BASE_CMD --timestamp --tsa $TSA_URL --baseline-lta $SIGNATURE_PARAMS"
         ;;
 esac
 
