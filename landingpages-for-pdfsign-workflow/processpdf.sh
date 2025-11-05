@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 # PDF Signing Script - Unified wrapper for open-pdf-sign.jar
+# POSIX-compliant version for sh shell
 # Supports multiple signing modes: basic, timestamp, baseline-lt, baseline-lta
 
 set -e
@@ -77,44 +78,49 @@ while getopts "i:o:c:k:m:p:g:t:j:h" opt; do
 done
 
 # Validate required arguments
-if [[ -z "$INPUT_FILE" ]] || [[ -z "$OUTPUT_FILE" ]] || [[ -z "$CERT_FILE" ]] || [[ -z "$KEY_FILE" ]]; then
+if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ] || [ -z "$CERT_FILE" ] || [ -z "$KEY_FILE" ]; then
     echo "Error: Missing required arguments"
     echo ""
     usage
 fi
 
 # Validate files exist
-if [[ ! -f "$JAR_PATH" ]]; then
+if [ ! -f "$JAR_PATH" ]; then
     echo "Error: JAR file not found: $JAR_PATH"
     exit 1
 fi
 
-if [[ ! -f "$INPUT_FILE" ]]; then
+if [ ! -f "$INPUT_FILE" ]; then
     echo "Error: Input file not found: $INPUT_FILE"
     exit 1
 fi
 
-if [[ ! -f "$CERT_FILE" ]]; then
+if [ ! -f "$CERT_FILE" ]; then
     echo "Error: Certificate file not found: $CERT_FILE"
     exit 1
 fi
 
-if [[ ! -f "$KEY_FILE" ]]; then
+if [ ! -f "$KEY_FILE" ]; then
     echo "Error: Key file not found: $KEY_FILE"
     exit 1
 fi
 
-if [[ ! -f "$IMAGE_FILE" ]]; then
+if [ ! -f "$IMAGE_FILE" ]; then
     echo "Error: Image file not found: $IMAGE_FILE"
     exit 1
 fi
 
-# Validate mode
-if [[ ! "$MODE" =~ ^(basic|timestamp|baseline-lt|baseline-lta)$ ]]; then
-    echo "Error: Invalid mode: $MODE"
-    echo "Valid modes: basic, timestamp, baseline-lt, baseline-lta"
-    exit 1
-fi
+# Validate mode (POSIX-compliant way)
+case "$MODE" in
+    basic|timestamp|baseline-lt|baseline-lta)
+        # Valid mode
+        ;;
+    *)
+        echo "Error: Invalid mode: $MODE"
+        echo "Valid modes: basic, timestamp, baseline-lt, baseline-lta"
+        exit 1
+        ;;
+esac
 
 # Build the command based on mode
 BASE_CMD="java -jar $JAR_PATH -i $INPUT_FILE -o $OUTPUT_FILE -c $CERT_FILE -k $KEY_FILE"
@@ -140,7 +146,7 @@ echo ""
 eval $CMD
 
 # Check result
-if [[ $? -eq 0 ]]; then
+if [ $? -eq 0 ]; then
     echo ""
     echo "Success! PDF signed and saved to: $OUTPUT_FILE"
     exit 0
