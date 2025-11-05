@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Aláírás</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2a5298;
+        }
+        
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #2a5298;
+            border-radius: 10px;
+            background: #f0f4f8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        input[type="file"]:hover {
+            border-color: #1e3c72;
+            background: #e8eef5;
+        }
+        
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="password"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f0f4f8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-group:hover {
+            background: #e8eef5;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #2a5298;
+        }
+        
+        .checkbox-label {
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .file-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .logo-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff8e1;
+            border-left: 4px solid #ffa726;
+            border-radius: 5px;
+        }
+        
+        .logo-section.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(42, 82, 152, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #1565c0;
+            margin-bottom: 25px;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .message.success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .message.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .download-btn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🔏</div>
+            <h1>PDF Aláírás</h1>
+            <p class="subtitle">Biztonságos elektronikus dokumentum aláírás</p>
+        </div>
+        
+        <div class="info-box">
+            ℹ️ Töltse fel a PDF dokumentumot és a tanúsítványt az aláíráshoz
+        </div>
+        
+        <form id="signForm">
+            
+            <div class="form-group">
+                <label for="pdfFile">📄 PDF Dokumentum <span class="required">*</span></label>
+                <input type="file" id="pdfFile" name="pdfFile" accept=".pdf" required>
+                <div class="file-info">Csak PDF fájl (.pdf)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="pfxFile">🔐 Tanúsítvány (PFX) <span class="required">*</span></label>
+                <input type="file" id="pfxFile" name="pfxFile" accept=".pfx,.p12" required>
+                <div class="file-info">Személyes tanúsítvány (.pfx vagy .p12)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="pfxPassword">🔑 Tanúsítvány Jelszó <span class="required">*</span></label>
+                <input type="password" id="pfxPassword" name="pfxPassword" placeholder="Adja meg a tanúsítvány jelszavát" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="signLevel">📝 Aláírás Szintje</label>
+                <select id="signLevel" name="signLevel">
+                    <option value="T" selected>T - Időbélyeggel (ajánlott)</option>
+                    <option value="B">B - Alapszintű</option>
+                </select>
+                <div class="file-info">T = Időbélyeges aláírás, B = Alapszintű aláírás</div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group" onclick="document.getElementById('isVisible').click();">
+                    <input type="checkbox" id="isVisible" name="isVisible" onclick="event.stopPropagation();">
+                    <label class="checkbox-label" for="isVisible">👁️ Látható aláírás a dokumentumon</label>
+                </div>
+            </div>
+            
+            <div class="logo-section" id="logoSection">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="logoFile">🖼️ Aláírás Logó <span class="required">*</span></label>
+                    <input type="file" id="logoFile" name="logoFile" accept=".jpg,.jpeg,.png">
+                    <div class="file-info">Kép az aláírás mellé (.jpg, .jpeg, .png)</div>
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn">
+                <span>✍️ PDF Aláírása</span>
+            </button>
+        </form>
+
+        <div class="message" id="messageBox"></div>
+        <button class="download-btn" id="downloadBtn" style="display: none;">
+            📥 Aláírt PDF Letöltése
+        </button>
+    </div>
+    
+    <script>
+        const isVisibleCheckbox = document.getElementById('isVisible');
+        const logoSection = document.getElementById('logoSection');
+        const logoFileInput = document.getElementById('logoFile');
+        const form = document.getElementById('signForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageBox = document.getElementById('messageBox');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        let signedPdfBlob = null;
+        
+        // Cél URL felépítése az aktuális hely alapján
+        const targetUrl = `${window.location.origin}/webhook/pdf-sign`;
+        
+        // Látható aláírás kezelése
+        isVisibleCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                logoSection.classList.add('active');
+                logoFileInput.required = true;
+            } else {
+                logoSection.classList.remove('active');
+                logoFileInput.required = false;
+                logoFileInput.value = '';
+            }
+        });
+        
+        // Üzenet megjelenítés
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = 'message ' + type + ' show';
+        }
+        
+        // Form submit kezelése
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Gomb letiltása
+            submitBtn.innerHTML = '<span>⏳ Aláírás folyamatban...</span>';
+            submitBtn.disabled = true;
+            messageBox.className = 'message';
+            downloadBtn.style.display = 'none';
+            
+            try {
+                // FormData összeállítása
+                const formData = new FormData();
+                
+                // Fájlok és mezők hozzáadása
+                formData.append('pdfFile', document.getElementById('pdfFile').files[0]);
+                formData.append('pfxFile', document.getElementById('pfxFile').files[0]);
+                formData.append('pfxPassword', document.getElementById('pfxPassword').value);
+                formData.append('signLevel', document.getElementById('signLevel').value);
+                formData.append('isVisible', isVisibleCheckbox.checked ? 'true' : 'false');
+                
+                if (isVisibleCheckbox.checked && logoFileInput.files[0]) {
+                    formData.append('logoFile', logoFileInput.files[0]);
+                }
+                
+                // POST kérés a ./webhook/pdf-sign címre
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // PDF letöltése
+                    signedPdfBlob = await response.blob();
+                    
+                    showMessage('✅ PDF sikeresen aláírva!', 'success');
+                    downloadBtn.style.display = 'block';
+                    
+                } else {
+                    const errorText = await response.text();
+                    showMessage('❌ Hiba történt: ' + errorText, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('❌ Hiba történt a feltöltés során: ' + error.message, 'error');
+            } finally {
+                // Gomb visszaállítása
+                submitBtn.innerHTML = '<span>✍️ PDF Aláírása</span>';
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Letöltés gomb
+        downloadBtn.addEventListener('click', function() {
+            if (signedPdfBlob) {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const url = window.URL.createObjectURL(signedPdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `signed_${timestamp}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+        });
+        
+        // Fájl név megjelenítése
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    const fileInfo = this.nextElementSibling;
+                    if (fileInfo && fileInfo.classList.contains('file-info')) {
+                        fileInfo.textContent = '✓ ' + fileName;
+                        fileInfo.style.color = '#2a5298';
+                        fileInfo.style.fontWeight = '600';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
